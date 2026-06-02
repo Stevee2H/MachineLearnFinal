@@ -27,65 +27,9 @@ st.set_page_config(
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* ── Sidebar background ── */
-    [data-testid="stSidebar"] {background: #0e1117 !important;}
+    [data-testid="stSidebar"] {background: #1a1a2e;}
     [data-testid="stSidebar"] * {color: #e0e0e0 !important;}
-
-    /* ── Sidebar brand ── */
-    .sidebar-brand {
-        display: flex; align-items: center; gap: 8px;
-        font-size: 22px; font-weight: 800;
-        color: #ffffff !important; margin-bottom: 2px;
-        letter-spacing: -0.3px;
-    }
-    .sidebar-subtitle {
-        font-size: 12px; color: #9ca3af !important;
-        margin-bottom: 24px; font-weight: 400;
-    }
-
-    /* ── Nav buttons — default ── */
-    [data-testid="stSidebar"] .stButton > button {
-        background: transparent !important;
-        border: 1px solid #2d2d3a !important;
-        color: #d1d5db !important;
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        font-size: 14px !important;
-        text-align: left !important;
-        padding: 10px 16px !important;
-        margin-bottom: 4px !important;
-    }
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: #1e2130 !important;
-        border-color: #4b5563 !important;
-        color: #ffffff !important;
-    }
-
-    /* ── Nav buttons — active ── */
-    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: #e53e3e !important;
-        border: none !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-    }
-    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-        background: #c53030 !important;
-    }
-
-    /* ── Credits ── */
-    .sidebar-credits {
-        margin-top: 32px; font-size: 13px;
-        color: #e0e0e0 !important; line-height: 2;
-    }
-    .sidebar-credits .credits-title {
-        font-weight: 700; font-size: 14px;
-        margin-bottom: 6px; color: #ffffff !important;
-    }
-    .sidebar-credits .credits-university {
-        margin-top: 6px; font-size: 11px; color: #6b7280 !important;
-    }
-
-    /* ── Main content ── */
+    .sidebar-title {font-size: 22px; font-weight: 700; color: #4fc3f7 !important; margin-bottom: 8px;}
     div[data-testid="stMetric"] {
         background: #16213e; border: 1px solid #0f3460;
         border-radius: 10px; padding: 16px;
@@ -311,19 +255,15 @@ def list_saved_pickles():
 
 # ── Sidebar Nav ───────────────────────────────────────────────────────────────
 with st.sidebar:
-    # Brand
-    st.markdown("""
-    <div class="sidebar-brand">🚗 MobilSecond</div>
-    <div class="sidebar-subtitle">Smart Market Valuation App</div>
-    """, unsafe_allow_html=True)
-
-    # Navigation
+    st.markdown('<div class="sidebar-title">🚗 Mobil Bekas</div>', unsafe_allow_html=True)
+    st.markdown("**Machine Learning App**")
+    st.markdown("---")
     pages = {
         "🏠 Home"                        : "Home",
-        "📊 Data Insights (EDA)"         : "EDA",
-        "⚙️ Data Preprocessing"          : "Preprocessing",
+        "📊 EDA"                         : "EDA",
+        "⚙️ Preprocessing"               : "Preprocessing",
         "🤖 Model Selection & Evaluation": "Model",
-        "🔮 Price Prediction"            : "Prediction",
+        "🔮 Prediction"                  : "Prediction",
     }
     for label, key in pages.items():
         is_active = st.session_state.page == key
@@ -331,15 +271,13 @@ with st.sidebar:
                      type="primary" if is_active else "secondary"):
             st.session_state.page = key
             st.rerun()
-
-    # Credits
+    st.markdown("---")
     st.markdown("""
-    <div class="sidebar-credits">
-        <div class="credits-title">Dibuat oleh:</div>
-        1. Albertus Adrian<br>
-        2. Jonathan Raffael<br>
+    <div style="font-size:18px; color:#e0e0e0; line-height:2.2;">
+        <div style="margin-bottom:6px; font-weight:700; font-size:16px; color:#4fc3f7;">Dibuat oleh:</div>
+        1. Jonathan Raffael<br>
+        2. Albertus Adrian<br>
         3. Steven Hosea
-        <div class="credits-university">BINUS university students</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -880,10 +818,12 @@ elif st.session_state.page == "Model":
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
 
+            mape = np.mean(np.abs((y_test.values - y_pred) / y_test.values)) * 100
             results[name] = {
                 "R² Score" : r2_score(y_test, y_pred),
                 "MAE"      : mean_absolute_error(y_test, y_pred),
                 "RMSE"     : np.sqrt(mean_squared_error(y_test, y_pred)),
+                "MAPE (%)" : mape,
             }
             trained_models[name] = (model, y_pred)
 
@@ -900,7 +840,7 @@ elif st.session_state.page == "Model":
         st.subheader("📊 Hasil Evaluasi")
 
         df_results = pd.DataFrame(results).T.reset_index()
-        df_results.columns = ["Model", "R² Score", "MAE", "RMSE"]
+        df_results.columns = ["Model", "R² Score", "MAE", "RMSE", "MAPE (%)"]
         st.markdown(eval_table_html(df_results), unsafe_allow_html=True)
 
         # Best model highlight
@@ -918,11 +858,13 @@ elif st.session_state.page == "Model":
             r2   = m["R² Score"]
             mae  = m["MAE"]
             rmse = m["RMSE"]
+            mape = m["MAPE (%)"]
 
-            c1, c2, c3 = st.columns(3)
+            c1, c2, c3, c4 = st.columns(4)
             c1.metric("R² Score", f"{r2:.4f}")
             c2.metric("MAE",      format_rupiah(mae))
             c3.metric("RMSE",     format_rupiah(rmse))
+            c4.metric("MAPE",     f"{mape:.2f}%")
 
             # Interpretasi otomatis
             if r2 >= 0.90:
@@ -941,6 +883,19 @@ elif st.session_state.page == "Model":
             mae_pct  = mae / y_test.mean() * 100
             rmse_pct = rmse / y_test.mean() * 100
 
+            if mape < 10:
+                mape_label, mape_color = "Sangat Baik ✅", "#66bb6a"
+                mape_desc = f"Rata-rata persentase kesalahan hanya <b>{mape:.2f}%</b> dari harga aktual — prediksi sangat akurat."
+            elif mape < 20:
+                mape_label, mape_color = "Baik 👍", "#ffa726"
+                mape_desc = f"Rata-rata persentase kesalahan <b>{mape:.2f}%</b> dari harga aktual — prediksi cukup andal."
+            elif mape < 30:
+                mape_label, mape_color = "Cukup ⚠️", "#ff7043"
+                mape_desc = f"Rata-rata persentase kesalahan <b>{mape:.2f}%</b> dari harga aktual — model perlu ditingkatkan."
+            else:
+                mape_label, mape_color = "Kurang ❌", "#ef5350"
+                mape_desc = f"Rata-rata persentase kesalahan <b>{mape:.2f}%</b> dari harga aktual — model kurang akurat."
+
             st.markdown(f"""
             <div style="background:#16213e; border-left:4px solid {r2_color};
                  border-radius:8px; padding:14px 18px; margin:10px 0;">
@@ -953,7 +908,11 @@ elif st.session_state.page == "Model":
                 <b>RMSE ({format_rupiah(rmse)} | {rmse_pct:.1f}% dari rata-rata harga)</b><br>
                 RMSE lebih sensitif terhadap kesalahan besar. Nilai {format_rupiah(rmse)} berarti
                 prediksi yang meleset jauh (misal mobil mewah) memberi penalti lebih besar.
-                {"✅ Nilai RMSE tidak jauh dari MAE — prediksi konsisten." if rmse/mae < 2 else "⚠️ RMSE jauh lebih besar dari MAE — ada beberapa prediksi yang meleset sangat jauh."}
+                {"✅ Nilai RMSE tidak jauh dari MAE — prediksi konsisten." if rmse/mae < 2 else "⚠️ RMSE jauh lebih besar dari MAE — ada beberapa prediksi yang meleset sangat jauh."}<br><br>
+                <b>MAPE ({mape:.2f}%) — {mape_label}</b><br>
+                {mape_desc}
+                MAPE mengukur rata-rata persentase error relatif terhadap nilai aktual, sehingga mudah diinterpretasikan
+                tanpa bergantung pada skala harga.
             </div>
             """, unsafe_allow_html=True)
 
