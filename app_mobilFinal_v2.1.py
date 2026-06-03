@@ -11,7 +11,6 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.svm import SVR
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
@@ -47,7 +46,7 @@ st.markdown("""
 # ── Session State Init ────────────────────────────────────────────────────────
 for key in ["page", "df", "X_train", "X_test", "y_train", "y_test",
             "scaler", "scaler_name", "train_cols", "models", "test_size",
-            "random_state", "eval_results", "cat_cols", "num_cols"]:
+            "random_state", "eval_results", "cat_cols", "num_cols", "cv_results"]:
     if key not in st.session_state:
         st.session_state[key] = "Home" if key == "page" else None
 
@@ -778,7 +777,6 @@ elif st.session_state.page == "Model":
         "KNN Regressor"           : "knn",
         "Ridge Regression"        : "ridge",
         "Lasso Regression"        : "lasso",
-        "SVR"                     : "svr",
     }
 
     st.subheader("1️⃣  Pilih Model")
@@ -795,6 +793,7 @@ elif st.session_state.page == "Model":
 
         results        = {}
         trained_models = {}
+        cv_results     = {}
         progress = st.progress(0, "Melatih model...")
 
         for i, name in enumerate(selected_models):
@@ -812,11 +811,12 @@ elif st.session_state.page == "Model":
             elif k == "lasso":
                 from sklearn.linear_model import Lasso
                 model = Lasso(alpha=1.0)
-            else:
-                model = SVR(kernel="rbf", C=1.0, epsilon=0.1)
 
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
+
+            cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring="r2")
+            cv_results[name] = cv_scores
 
             mape = np.mean(np.abs((y_test.values - y_pred) / y_test.values)) * 100
             results[name] = {
@@ -830,6 +830,7 @@ elif st.session_state.page == "Model":
         progress.progress(1.0, "✅ Selesai!")
         st.session_state.models       = trained_models
         st.session_state.eval_results = results
+        st.session_state.cv_results   = cv_results
 
     # ── Evaluation Results ────────────────────────────────────────────────────
     if st.session_state.eval_results:
@@ -851,6 +852,54 @@ elif st.session_state.page == "Model":
             🏆 <b>Model Terbaik: {best_model_name}</b> dengan R² = {results[best_model_name]['R² Score']:.4f}
         </div>
         """, unsafe_allow_html=True)
+
+        # ── Cross-Validation Results ──────────────────────────────────────────
+        cv_data = st.session_state.get("cv_results") or {}
+        if cv_data:
+            st.markdown("---")
+            st.subheader("🔄 Cross-Validation (K = 5)")
+            st.markdown("""
+            <div style="background:#16213e; border-left:4px solid #ce93d8; border-radius:8px; padding:12px 16px; margin-bottom:12px;">
+                <b>📖 Apa itu Cross-Validation?</b><br>
+                Data training dibagi menjadi 5 <i>fold</i>. Model dilatih pada 4 fold dan diuji pada 1 fold secara bergantian,
+                sehingga menghasilkan 5 nilai R². Rata-rata dan standar deviasinya menunjukkan seberapa stabil model.
+                Standar deviasi kecil berarti model konsisten pada berbagai subset data.
+            </div>
+            """, unsafe_allow_html=True)
+
+            cv_rows = []
+            for mn, scores in cv_data.items():
+                cv_rows.append({
+                    "Model"   : mn,
+                    "Fold 1"  : round(float(scores[0]), 4),
+                    "Fold 2"  : round(float(scores[1]), 4),
+                    "Fold 3"  : round(float(scores[2]), 4),
+                    "Fold 4"  : round(float(scores[3]), 4),
+                    "Fold 5"  : round(float(scores[4]), 4),
+                    "Mean R²" : round(float(scores.mean()), 4),
+                    "Std R²"  : round(float(scores.std()), 4),
+                })
+            df_cv = pd.DataFrame(cv_rows)
+            st.markdown(eval_table_html(df_cv), unsafe_allow_html=True)
+
+            fig_cv, ax_cv = plt.subplots(figsize=(9, 4))
+            fig_cv.patch.set_facecolor("#0e1117")
+            ax_cv.set_facecolor("#16213e")
+            cv_means = [cv_data[mn].mean() for mn in cv_data]
+            cv_stds  = [cv_data[mn].std()  for mn in cv_data]
+            bars = ax_cv.bar(list(cv_data.keys()), cv_means, yerr=cv_stds,
+                             color="#ce93d8", alpha=0.8, capsize=6, error_kw={"color": "white", "linewidth": 1.5})
+            ax_cv.set_title("Mean R² per Model (±Std, 5-Fold CV)", color="white")
+            ax_cv.set_ylabel("Mean R²", color="white")
+            ax_cv.tick_params(colors="white", axis="x", rotation=15)
+            ax_cv.tick_params(colors="white", axis="y")
+            ax_cv.set_ylim(0, 1.05)
+            for bar, mean_val in zip(bars, cv_means):
+                ax_cv.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
+                           f"{mean_val:.3f}", ha="center", va="bottom", color="white", fontsize=10)
+            plt.tight_layout()
+            st.pyplot(fig_cv, use_container_width=True)
+            plt.close(fig_cv)
 
         for name, (model, y_pred) in trained_models.items():
             st.markdown(f"### 📌 {name}")
@@ -930,6 +979,39 @@ elif st.session_state.page == "Model":
             ax.legend(facecolor="#16213e", labelcolor="white")
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
+
+            # ── Koefisien variabel (Linear, Ridge, Lasso) ─────────────────────
+            if hasattr(model, "coef_"):
+                train_cols = st.session_state.train_cols or []
+                coef_series = pd.Series(model.coef_, index=train_cols)
+                top_n = min(10, len(coef_series))
+                top_idx = coef_series.abs().sort_values(ascending=False).head(top_n).index
+                top_coef = coef_series[top_idx].sort_values()
+
+                st.markdown(f"#### 📊 Top {top_n} Koefisien Variabel — {name}")
+                st.caption("Nilai positif → menaikkan harga; nilai negatif → menurunkan harga. Hanya ditampilkan 10 variabel dengan nilai absolut terbesar.")
+
+                colors_coef = ["#ef5350" if v < 0 else "#4fc3f7" for v in top_coef]
+                fig_c, ax_c = plt.subplots(figsize=(9, max(4, top_n * 0.45)))
+                fig_c.patch.set_facecolor("#0e1117")
+                ax_c.set_facecolor("#16213e")
+                top_coef.plot(kind="barh", ax=ax_c, color=colors_coef, alpha=0.85)
+                ax_c.set_title(f"Top {top_n} Koefisien (|nilai| terbesar)", color="white")
+                ax_c.axvline(0, color="white", linewidth=0.8, linestyle="--")
+                ax_c.tick_params(colors="white")
+                ax_c.xaxis.label.set_color("white")
+                ax_c.yaxis.label.set_color("white")
+                plt.tight_layout()
+                st.pyplot(fig_c, use_container_width=True)
+                plt.close(fig_c)
+
+                coef_df = pd.DataFrame({
+                    "Variabel"    : top_idx,
+                    "Koefisien"   : coef_series[top_idx].round(4).values,
+                    "|Koefisien|" : coef_series[top_idx].abs().round(4).values,
+                }).sort_values("|Koefisien|", ascending=False).reset_index(drop=True)
+                st.dataframe(coef_df, use_container_width=True)
+
             st.markdown("---")
 
         # ── Feature Importance (RF only) ──────────────────────────────────────
