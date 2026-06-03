@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore')
 
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Prediksi Harga Mobil Bekas",
+    page_title="MobilSecond – Smart Market Valuation",
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -389,15 +389,15 @@ def list_saved_pickles():
 
 # ── Sidebar Nav ───────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="sidebar-title">🚗 Mobil Bekas</div>', unsafe_allow_html=True)
-    st.markdown("**Machine Learning App**")
+    st.markdown('<div class="sidebar-title">🚗 MobilSecond</div>', unsafe_allow_html=True)
+    st.markdown("**Smart Market Valuation App**")
     st.markdown("---")
     pages = {
-        "🏠 Home"                        : "Home",
-        "📊 EDA"                         : "EDA",
-        "⚙️ Preprocessing"               : "Preprocessing",
-        "🤖 Model Selection & Evaluation": "Model",
-        "🔮 Prediction"                  : "Prediction",
+        "🏠 Home"                          : "Home",
+        "📊 Data Insights"                 : "EDA",
+        "⚙️ Data Preprocessing"            : "Preprocessing",
+        "🔍 Model Selection & Evaluation"  : "Model",
+        "🔮 Price Prediction"              : "Prediction",
     }
     for label, key in pages.items():
         is_active = st.session_state.page == key
@@ -409,8 +409,8 @@ with st.sidebar:
     st.markdown("""
     <div style="font-size:18px; color:#e0e0e0; line-height:2.2;">
         <div style="margin-bottom:6px; font-weight:700; font-size:16px; color:#4fc3f7;">Dibuat oleh:</div>
-        1. Jonathan Raffael<br>
-        2. Albertus Adrian<br>
+        1. Albertus Adrian<br>
+        2. Jonathan Raffael<br>
         3. Steven Hosea
     </div>
     """, unsafe_allow_html=True)
