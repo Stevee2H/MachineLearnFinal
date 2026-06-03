@@ -26,9 +26,63 @@ st.set_page_config(
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    [data-testid="stSidebar"] {background: #1a1a2e;}
+    /* ── Sidebar base ── */
+    [data-testid="stSidebar"] {
+        background: #1a1a2e !important;
+        min-width: 220px !important;
+    }
     [data-testid="stSidebar"] * {color: #e0e0e0 !important;}
-    .sidebar-title {font-size: 22px; font-weight: 700; color: #4fc3f7 !important; margin-bottom: 8px;}
+    [data-testid="stSidebarContent"] {
+        padding: 1.5rem 1rem 1rem 1rem !important;
+    }
+
+    /* ── Sidebar nav buttons ── */
+    [data-testid="stSidebar"] .stButton > button {
+        width: 100% !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        padding: 12px 16px !important;
+        margin-bottom: 6px !important;
+        text-align: left !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        background: #252540 !important;
+        color: #e0e0e0 !important;
+        transition: background 0.2s ease !important;
+    }
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: #0f3460 !important;
+        border-color: #4fc3f7 !important;
+    }
+    /* Active (primary) button */
+    [data-testid="stSidebar"] .stButton > button[kind="primary"],
+    [data-testid="stSidebar"] .stButton > button[data-testid="baseButton-primary"] {
+        background: #e53935 !important;
+        border-color: #e53935 !important;
+        color: #ffffff !important;
+    }
+
+    /* ── Sidebar title ── */
+    .sidebar-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #4fc3f7 !important;
+        margin-bottom: 4px;
+    }
+
+    /* ── Mobile: expand sidebar nicely ── */
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"] {
+            min-width: 80vw !important;
+            max-width: 88vw !important;
+        }
+        [data-testid="stSidebar"] .stButton > button {
+            font-size: 16px !important;
+            padding: 14px 18px !important;
+        }
+    }
+
+    /* ── Metrics ── */
     div[data-testid="stMetric"] {
         background: #16213e; border: 1px solid #0f3460;
         border-radius: 10px; padding: 16px;
@@ -37,6 +91,8 @@ st.markdown("""
     div[data-testid="stMetric"] [data-testid="stMetricValue"] {
         color: #ffffff !important; font-size: 26px !important; font-weight: 700 !important;
     }
+
+    /* ── General ── */
     .stButton > button {border-radius: 8px; font-weight: 600;}
     h1 {color: #4fc3f7;}
     h2, h3 {color: #81d4fa;}
@@ -51,7 +107,7 @@ for key in ["page", "df", "X_train", "X_test", "y_train", "y_test",
         st.session_state[key] = "Home" if key == "page" else None
 
 # ── Constants ─────────────────────────────────────────────────────────────────
-DATA_FILE    = "cars_combined_final1.csv"
+DATA_FILE    = "cars_combined_final2.csv"
 TARGET_COL   = "price"
 CAT_COLS     = ["car_type", "brand_name", "model", "engine_type", "transmission", "location"]
 NUM_COLS     = ["year", "total_km"]
@@ -210,6 +266,85 @@ MODEL_CAR_TYPES = {
     "Xpander"        : ["MPV", "SUV"],
     "Yaris"          : ["Hatchback", "Sedan"],
     "Yaris Cross"    : ["SUV"],
+}
+
+# ── Validasi: Engine type yang valid per model (diambil langsung dari CSV) ──────
+MODEL_ENGINE_TYPES = {
+    '2': ['Bensin'],
+    '3 Series': ['Bensin', 'Diesel'],
+    '5 Series': ['Bensin', 'Diesel'],
+    '7 Series': ['Bensin'],
+    'A-Class': ['Bensin'],
+    'Accord': ['Bensin'],
+    'Agya': ['Bensin'],
+    'Alphard': ['Bensin', 'Diesel', 'Hybrid'],
+    'Avanza': ['Bensin'],
+    'Avanza Veloz': ['Bensin'],
+    'Ayla': ['Bensin'],
+    'BRV': ['Bensin'],
+    'Baleno': ['Bensin'],
+    'Brio': ['Bensin'],
+    'C-Class': ['Bensin'],
+    'CR-V': ['Bensin', 'Hybrid'],
+    'CX': ['Bensin'],
+    'CX-3': ['Bensin'],
+    'CX-5': ['Bensin'],
+    'Calya': ['Bensin'],
+    'Camry': ['Bensin', 'Hybrid'],
+    'City': ['Bensin'],
+    'Civic': ['Bensin'],
+    'Corolla': ['Bensin', 'Hybrid'],
+    'Creta': ['Bensin'],
+    'E-Class': ['Bensin'],
+    'Ertiga': ['Bensin', 'Hybrid'],
+    'Fortuner': ['Bensin', 'Diesel'],
+    'Freed': ['Bensin'],
+    'GLC-Class': ['Bensin', 'Diesel'],
+    'Grand': ['Bensin'],
+    'Grand Livina': ['Bensin'],
+    'HRV': ['Bensin'],
+    'Harrier': ['Bensin'],
+    'Ignis': ['Bensin'],
+    'Jazz': ['Bensin'],
+    'Jimny': ['Bensin'],
+    'Juke': ['Bensin'],
+    'Karimun': ['Bensin'],
+    'Kijang': ['Bensin', 'Diesel'],
+    'Kijang Innova': ['Bensin', 'Diesel'],
+    'Land Cruiser': ['Bensin', 'Diesel'],
+    'March': ['Bensin'],
+    'Mirage': ['Bensin'],
+    'Mobilio': ['Bensin'],
+    'Outlander Sport': ['Bensin'],
+    'Pajero Sport': ['Bensin', 'Diesel'],
+    'Palisade': ['Diesel'],
+    'Raize': ['Bensin'],
+    'Rush': ['Bensin'],
+    'S-Class': ['Bensin'],
+    'SX4 S Cross': ['Bensin'],
+    'Santa Fe': ['Bensin', 'Diesel'],
+    'Serena': ['Bensin'],
+    'Sienta': ['Bensin'],
+    'Sigra': ['Bensin'],
+    'Sirion': ['Bensin'],
+    'Splash': ['Bensin'],
+    'Swift': ['Bensin'],
+    'Teana': ['Bensin'],
+    'Terios': ['Bensin'],
+    'Vellfire': ['Bensin'],
+    'Veloz': ['Bensin'],
+    'Venturer': ['Bensin', 'Diesel'],
+    'Vios': ['Bensin'],
+    'WR-V': ['Bensin'],
+    'X-Trail': ['Bensin'],
+    'X1': ['Bensin'],
+    'X3': ['Bensin', 'Diesel'],
+    'X5': ['Bensin', 'Diesel'],
+    'XL7': ['Bensin', 'Hybrid'],
+    'Xenia': ['Bensin'],
+    'Xpander': ['Bensin'],
+    'Yaris': ['Bensin'],
+    'Yaris Cross': ['Bensin', 'Listrik'],
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1253,7 +1388,16 @@ elif st.session_state.page == "Prediction":
         total_km = st.number_input("Jarak Tempuh (KM)", min_value=0, max_value=500000,
                                    value=50000, step=1000)
 
-        engine_type = st.selectbox("Tipe Mesin", ["Bensin", "Diesel", "Hybrid", "Listrik"])
+        valid_engine_types = MODEL_ENGINE_TYPES.get(model, ["Bensin", "Diesel", "Hybrid", "Listrik"])
+        engine_type = st.selectbox(
+            "Tipe Mesin",
+            valid_engine_types,
+            help=f"Tipe mesin yang tersedia untuk {model}: {', '.join(valid_engine_types)}"
+        )
+        if len(valid_engine_types) == 1:
+            st.caption(f"✅ {model} hanya tersedia dengan mesin {valid_engine_types[0]}.")
+        else:
+            st.caption(f"✅ {model} tersedia dalam: {', '.join(valid_engine_types)}.")
         transmission = st.selectbox("Transmisi", ["Otomatis", "CVT", "Manual"])
 
         if df_ref is not None:
@@ -1274,6 +1418,8 @@ elif st.session_state.page == "Prediction":
             st.error(f"❌ Tahun tidak valid untuk {model}. Rentang yang diperbolehkan: {year_min}–{year_max}.")
         elif valid_car_types and car_type not in valid_car_types:
             st.error(f"❌ Tipe kendaraan '{car_type}' tidak sesuai untuk {model}. Pilihan valid: {', '.join(valid_car_types)}.")
+        elif engine_type not in valid_engine_types:
+            st.error(f"❌ Tipe mesin '{engine_type}' tidak tersedia untuk {model}. Pilihan valid: {', '.join(valid_engine_types)}.")
         else:
             input_dict = {
                 "car_type"    : car_type,
