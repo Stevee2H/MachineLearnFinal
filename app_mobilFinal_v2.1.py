@@ -44,7 +44,7 @@ st.markdown("""
         font-size: 15px !important;
         padding: 12px 16px !important;
         margin-bottom: 6px !important;
-        text-align: left !important;
+        text-align: center !important;
         border: 1px solid rgba(255,255,255,0.08) !important;
         background: #252540 !important;
         color: #e0e0e0 !important;
@@ -411,7 +411,8 @@ with st.sidebar:
         <div style="margin-bottom:6px; font-weight:700; font-size:16px; color:#4fc3f7;">Dibuat oleh:</div>
         1. Albertus Adrian<br>
         2. Jonathan Raffael<br>
-        3. Steven Hosea
+        3. Steven Hosea<br>
+        <div style="margin-top:8px; font-size:13px; color:#a0c4ff; font-style:italic;">Binus University Student</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -895,7 +896,13 @@ elif st.session_state.page == "Preprocessing":
 # PAGE 3 — MODEL SELECTION & EVALUATION
 # =============================================================================
 elif st.session_state.page == "Model":
-    st.title("🤖 Model Selection & Evaluation")
+    st.markdown("""
+    <div style="display:flex; justify-content:center; width:100%; margin-top:2rem; margin-bottom:1rem;">
+        <h1 style="color:#4fc3f7; margin:0; padding:0; text-align:center;">
+            🤖 Model Selection & Evaluation
+        </h1>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.session_state.X_train is None:
         st.warning("⚠️ Lakukan Preprocessing terlebih dahulu.")
