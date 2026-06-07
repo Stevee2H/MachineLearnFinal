@@ -9,7 +9,7 @@ from scipy.stats import skew
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import warnings
@@ -917,8 +917,6 @@ elif st.session_state.page == "Model":
         "Random Forest"           : "rf",
         "Linear Regression"       : "lr",
         "KNN Regressor"           : "knn",
-        "Ridge Regression"        : "ridge",
-        "Lasso Regression"        : "lasso",
     }
 
     st.subheader("1️⃣  Pilih Model")
@@ -947,12 +945,6 @@ elif st.session_state.page == "Model":
                 model = LinearRegression()
             elif k == "knn":
                 model = KNeighborsRegressor(n_neighbors=5)
-            elif k == "ridge":
-                from sklearn.linear_model import Ridge
-                model = Ridge(alpha=1.0)
-            elif k == "lasso":
-                from sklearn.linear_model import Lasso
-                model = Lasso(alpha=1.0)
 
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
@@ -1122,7 +1114,7 @@ elif st.session_state.page == "Model":
             st.pyplot(fig, use_container_width=True)
             plt.close(fig)
 
-            # ── Koefisien variabel (Linear, Ridge, Lasso) ─────────────────────
+            # ── Koefisien variabel (Linear Regression) ────────────────────────
             if hasattr(model, "coef_"):
                 train_cols = st.session_state.train_cols or []
                 coef_series = pd.Series(model.coef_, index=train_cols)
